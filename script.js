@@ -1,25 +1,37 @@
 const i18n = {
     uk: {
-        online: "Онлайн", offline: "Офлайн", title: "Вхід / Реєстрація",
-        user: "Ім'я користувача", pass: "Пароль", login: "Увійти",
-        reg: "Реєстрація", welcome: "Вітаємо, ", logout: "Вихід",
-        notes: "Нотатки", notePlace: "Введіть свій текст тут...",
-        weather: "Погода", cityPlace: "Місто...",
-        weatherPlace: "Введіть місто для пошуку",
-        errAuth: "Невірне ім'я або пароль", errExist: "Користувач вже існує",
-        regOk: "Реєстрація успішна! Увійдіть", saved: "Збережено локально",
-        wErr: "Помилка завантаження погоди", wOff: "Погода недоступна офлайн"
+        authTitle: "Вхід",
+        labelUsername: "Ім'я користувача",
+        labelPassword: "Пароль",
+        btnLogin: "Увійти",
+        logoutBtn: "Вихід",
+        welcomeMessage: "Вітаємо, {name}!",
+        widgetNotesTitle: "Нотатки",
+        notesPlaceholder: "Введіть свій текст тут...",
+        saved: "Автоматично збережено",
+        widgetWeatherTitle: "Погода",
+        weatherCityPlaceholder: "Місто...",
+        wLoading: "Завантаження...",
+        wErr: "Місто не знайдено",
+        wOff: "Немає мережі для запиту погоди",
+        errAuth: "Неправильне ім'я або пароль"
     },
     en: {
-        online: "Online", offline: "Offline", title: "Sign In / Register",
-        user: "Username", pass: "Password", login: "Login",
-        reg: "Register", welcome: "Welcome, ", logout: "Logout",
-        notes: "Notes", notePlace: "Type your text here...",
-        weather: "Weather", cityPlace: "City...",
-        weatherPlace: "Enter city to search",
-        errAuth: "Invalid username or password", errExist: "User already exists",
-        regOk: "Registration successful! Log in", saved: "Saved locally",
-        wErr: "Error fetching weather", wOff: "Weather unavailable offline"
+        authTitle: "Login",
+        labelUsername: "Username",
+        labelPassword: "Password",
+        btnLogin: "Login",
+        logoutBtn: "Logout",
+        welcomeMessage: "Welcome, {name}!",
+        widgetNotesTitle: "Notes",
+        notesPlaceholder: "Type your text here...",
+        saved: "Automatically saved",
+        widgetWeatherTitle: "Weather",
+        weatherCityPlaceholder: "City...",
+        wLoading: "Loading...",
+        wErr: "City not found",
+        wOff: "No network connection",
+        errAuth: "Invalid username or password"
     }
 };
 
@@ -28,85 +40,72 @@ let currentTheme = localStorage.getItem('theme') || 'light';
 let currentUser = sessionStorage.getItem('currentUser') || null;
 
 const dom = {
-    status: document.getElementById('network-status'),
     themeBtn: document.getElementById('theme-toggle'),
     langSelect: document.getElementById('lang-select'),
+    networkStatus: document.getElementById('network-status'),
     logoutBtn: document.getElementById('logout-btn'),
-    authSec: document.getElementById('auth-section'),
-    appSec: document.getElementById('app-section'),
-    authTitle: document.getElementById('auth-title'),
-    labelUser: document.getElementById('label-username'),
-    labelPass: document.getElementById('label-password'),
-    btnLogin: document.getElementById('btn-login'),
-    btnReg: document.getElementById('btn-register'),
+    authSection: document.getElementById('auth-section'),
+    appSection: document.getElementById('app-section'),
+    authForm: document.getElementById('auth-form'),
     authMsg: document.getElementById('auth-message'),
-    welcome: document.getElementById('welcome-message'),
-    notesTitle: document.getElementById('widget-notes-title'),
+    welcomeMessage: document.getElementById('welcome-message'),
     notesArea: document.getElementById('notes-area'),
     notesStatus: document.getElementById('notes-status'),
-    weatherTitle: document.getElementById('widget-weather-title'),
     weatherCity: document.getElementById('weather-city'),
     weatherBtn: document.getElementById('weather-btn'),
     weatherInfo: document.getElementById('weather-info')
 };
 
-function updateLangUI() {
-    const t = i18n[currentLang];
-    dom.status.textContent = window.navigator.onLine ? t.online : t.offline;
-    dom.authTitle.textContent = t.title;
-    dom.labelUser.textContent = t.user;
-    dom.labelPass.textContent = t.pass;
-    dom.btnLogin.textContent = t.login;
-    dom.btnReg.textContent = t.reg;
-    dom.logoutBtn.textContent = t.logout;
-    dom.notesTitle.textContent = t.notes;
-    dom.notesArea.placeholder = t.notePlace;
-    dom.weatherTitle.textContent = t.weather;
-    dom.weatherCity.placeholder = t.cityPlace;
-    if (!dom.weatherInfo.querySelector('.w-data')) {
-        dom.weatherInfo.textContent = t.weatherPlace;
-    }
-    if (currentUser) {
-        dom.welcome.textContent = t.welcome + currentUser;
-    }
+function setTheme(theme) {
+    currentTheme = theme;
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+    dom.themeBtn.textContent = theme === 'dark' ? '☀️' : '🌙';
 }
 
-function setTheme(theme) {
-    document.documentElement.setAttribute('data-theme', theme);
-    dom.themeBtn.textContent = theme === 'dark' ? '☀️' : '🌙';
-    localStorage.setItem('theme', theme);
-    currentTheme = theme;
+function updateLangUI() {
+    const t = i18n[currentLang];
+    
+    document.getElementById('auth-title').textContent = t.authTitle;
+    document.getElementById('label-username').textContent = t.labelUsername;
+    document.getElementById('label-password').textContent = t.labelPassword;
+    document.getElementById('btn-login').textContent = t.btnLogin;
+    dom.logoutBtn.textContent = t.logoutBtn;
+    
+    document.getElementById('widget-notes-title').textContent = t.widgetNotesTitle;
+    dom.notesArea.placeholder = t.notesPlaceholder;
+    
+    document.getElementById('widget-weather-title').textContent = t.widgetWeatherTitle;
+    dom.weatherCity.placeholder = t.weatherCityPlaceholder;
+    
+    if (currentUser) {
+        dom.welcomeMessage.textContent = t.welcomeMessage.replace("{name}", currentUser);
+    }
 }
 
 function updateNetworkStatus() {
-    const t = i18n[currentLang];
-    if (window.navigator.onLine) {
-        dom.status.textContent = t.online;
-        dom.status.className = 'online';
+    if (navigator.onLine) {
+        dom.networkStatus.textContent = "Online";
+        dom.networkStatus.className = "online";
     } else {
-        dom.status.textContent = t.offline;
-        dom.status.className = 'offline';
+        dom.networkStatus.textContent = "Offline";
+        dom.networkStatus.className = "offline";
     }
-}
-
-function getUsers() {
-    return JSON.parse(localStorage.getItem('users')) || {};
-}
-
-function saveUsers(users) {
-    localStorage.setItem('users', JSON.stringify(users));
 }
 
 function checkAuth() {
     if (currentUser) {
-        dom.authSec.classList.add('hidden');
-        dom.appSec.classList.remove('hidden');
+        dom.authSection.classList.add('hidden');
+        dom.appSection.classList.remove('hidden');
         dom.logoutBtn.classList.remove('hidden');
-        dom.notesArea.value = localStorage.getItem('notes_' + currentUser) || '';
+        
+        const savedNotes = localStorage.getItem('notes_' + currentUser);
+        dom.notesArea.value = savedNotes ? savedNotes : '';
+        
         updateLangUI();
     } else {
-        dom.authSec.classList.remove('hidden');
-        dom.appSec.classList.add('hidden');
+        dom.authSection.classList.remove('hidden');
+        dom.appSection.classList.add('hidden');
         dom.logoutBtn.classList.add('hidden');
     }
 }
@@ -122,34 +121,16 @@ dom.langSelect.addEventListener('change', (e) => {
     updateLangUI();
 });
 
-dom.btnReg.addEventListener('click', () => {
-    const u = document.getElementById('username').value.trim();
-    const p = document.getElementById('password').value.trim();
-    if (u.length < 3 || p.length < 4) return;
-    
-    const users = getUsers();
-    if (users[u]) {
-        dom.authMsg.textContent = i18n[currentLang].errExist;
-        dom.authMsg.style.color = 'var(--danger-color)';
-    } else {
-        users[u] = p;
-        saveUsers(users);
-        dom.authMsg.textContent = i18n[currentLang].regOk;
-        dom.authMsg.style.color = 'var(--success-color)';
-    }
-});
-
-document.getElementById('auth-form').addEventListener('submit', (e) => {
+dom.authForm.addEventListener('submit', (e) => {
     e.preventDefault();
     const u = document.getElementById('username').value.trim();
     const p = document.getElementById('password').value.trim();
     
-    const users = getUsers();
-    if (users[u] && users[u] === p) {
+    if (u === "admin" && p === "admin") {
         currentUser = u;
         sessionStorage.setItem('currentUser', u);
         dom.authMsg.textContent = '';
-        document.getElementById('auth-form').reset();
+        dom.authForm.reset();
         checkAuth();
     } else {
         dom.authMsg.textContent = i18n[currentLang].errAuth;
@@ -160,6 +141,7 @@ document.getElementById('auth-form').addEventListener('submit', (e) => {
 dom.logoutBtn.addEventListener('click', () => {
     currentUser = null;
     sessionStorage.removeItem('currentUser');
+    dom.weatherInfo.innerHTML = '';
     checkAuth();
 });
 
@@ -180,8 +162,10 @@ dom.weatherBtn.addEventListener('click', async () => {
         return;
     }
 
+    dom.weatherInfo.textContent = i18n[currentLang].wLoading;
+
     try {
-        const res = await fetch('https://wttr.in/' + encodeURIComponent(city) + '?format=j1');
+        const res = await fetch('https://wttr.in' + encodeURIComponent(city) + '?format=j1');
         if (!res.ok) throw new Error();
         const data = await res.json();
         
@@ -193,6 +177,10 @@ dom.weatherBtn.addEventListener('click', async () => {
     } catch (err) {
         dom.weatherInfo.textContent = i18n[currentLang].wErr;
     }
+});
+
+dom.weatherCity.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') dom.weatherBtn.click();
 });
 
 window.addEventListener('online', updateNetworkStatus);
@@ -225,3 +213,4 @@ if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register(workerUrl).catch(() => {});
     });
 }
+
